@@ -1,11 +1,30 @@
 const path = require('path')
-const { cpuUsage } = require('process')
+const { createFilePath } = require('gatsby-source-filesystem')
+
+exports.onCreateNode = ({ node, getNode, actions }) => {
+  const { createNodeField } = actions
+  if (node.internal.type === 'MarkdownRemark') {
+    const contentName = getNode(node.parent).sourceInstanceName
+    console.log(contentName)
+    createNodeField({
+      name: 'collection',
+      node,
+      value: contentName
+    })
+    createNodeField({
+      name: 'slug',
+      node,
+      value: createFilePath({ node, getNode })
+    })
+  }
+}
+
 exports.createPages = async ({ graphql, actions }) => {
   const { createPage } = actions
 
   const posts = await graphql(`
     query {
-      posts: allMarkdownRemark {
+      posts: allMarkdownRemark(filter: {fields: {collection: {eq: "pages"}}}) {
         edges {
           node {
             frontmatter {
@@ -16,8 +35,21 @@ exports.createPages = async ({ graphql, actions }) => {
           }
         }
       }
+      authors: allMarkdownRemark(filter: {fields: {collection: {eq: "authors"}}}) {
+        edges {
+          node {
+            frontmatter {
+              title
+            }
+            fields {
+              slug
+            }
+          }
+        }
+      }
     }
   `)
+
   const template = path.resolve('src/templates/post.js')
   posts.data.posts.edges.forEach(post => {
     createPage({
@@ -25,6 +57,17 @@ exports.createPages = async ({ graphql, actions }) => {
       component: template,
       context: {
         id: post.node.frontmatter.path
+      }
+    })
+  })
+
+  const templateAuthor = path.resolve('src/templates/author.js')
+  posts.data.authors.edges.forEach(author => {
+    createPage({
+      path: author.node.fields.slug,
+      component: templateAuthor,
+      context: {
+        id: author.node.fields.slug
       }
     })
   })
