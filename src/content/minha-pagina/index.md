@@ -1,10 +1,8 @@
 ---
-path: /blog/minha-pagina
 title: Título alterado pelo NetlifyCMS
 description: Bem vindo a minha página!
-categoria: teste
-price: 10
 banner: ./img1.jpg
+path: /blog/minha-pagina
 ---
 # Minha página
 
